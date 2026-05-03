@@ -29,10 +29,13 @@ USER user
 ENV HOME=/home/user PATH=/home/user/.local/bin:$PATH
 WORKDIR /home/user/app
 
+# Only Cython + numpy needed to compile monotonic_align; torch/scipy come from
+# the app's requirements at runtime via coqui-ai/TTS. Installing the full
+# VITS requirements.txt fails on Python 3.9 — numpy==1.18.5 and scipy==1.5.2
+# predate Python 3.9 wheels and can't be built from source with modern pip.
 RUN git clone https://github.com/jaywalnut310/vits.git && \
     cd vits && git checkout 2e561ba58618d021b5b8323d3765880f7e0ecfdb && \
-    sed -i 's/torch==1.6.0/torch==1.7.0/' requirements.txt && \
-    pip install --user -r requirements.txt && \
+    pip install --user "Cython==0.29.21" "numpy>=1.21,<1.25" && \
     cd monotonic_align && python setup.py build_ext --inplace
 
 ENV PYTHONPATH=/home/user/app/vits
